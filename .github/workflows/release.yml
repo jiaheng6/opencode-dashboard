@@ -10,8 +10,25 @@ permissions:
   contents: write
 
 jobs:
+  prepare-release:
+    name: 准备草稿 Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: 创建草稿 Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}"
+          || gh release create "${GITHUB_REF_NAME}"
+          --repo "${GITHUB_REPOSITORY}"
+          --title "OpenCode Go Dashboard ${GITHUB_REF_NAME}"
+          --generate-notes
+          --draft
+
   build:
     name: 构建 ${{ matrix.name }}
+    needs: prepare-release
     strategy:
       fail-fast: false
       matrix:
@@ -58,13 +75,16 @@ jobs:
       - name: 构建安装包
         run: npm run ${{ matrix.command }}
 
-      - name: 上传平台成果物
-        uses: actions/upload-artifact@v4
-        with:
-          name: package-${{ matrix.bundle }}
-          path: ${{ matrix.artifact }}
-          if-no-files-found: error
-          retention-days: 14
+      - name: 上传到草稿 Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload "${GITHUB_REF_NAME}"
+          ${{ matrix.artifact }}
+          --repo "${GITHUB_REPOSITORY}"
+          --clobber
 
   publish:
     name: 发布 GitHub Release
@@ -72,20 +92,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: 下载全部成果物
-        uses: actions/download-artifact@v4
-        with:
-          pattern: package-*
-          path: artifacts
-          merge-multiple: true
-
-      - name: 创建 Release 并上传成果物
+      - name: 发布正式 Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          gh release create "${GITHUB_REF_NAME}"
-          artifacts/*
+          gh release edit "${GITHUB_REF_NAME}"
           --repo "${GITHUB_REPOSITORY}"
-          --title "OpenCode Go Dashboard ${GITHUB_REF_NAME}"
-          --generate-notes
-          --verify-tag
+          --draft=false
+          --latest
