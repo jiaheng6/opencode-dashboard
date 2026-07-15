@@ -1,0 +1,91 @@
+name: 构建并发布桌面应用
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: 构建 ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            command: package:win
+            artifact: release/*.exe
+            bundle: windows
+          - name: Linux x64
+            os: ubuntu-latest
+            command: package:linux
+            artifact: release/*.AppImage
+            bundle: linux
+          - name: macOS 通用版
+            os: macos-latest
+            command: package:mac
+            artifact: release/*.dmg
+            bundle: macos
+
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行测试
+        run: npm test
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 构建安装包
+        run: npm run ${{ matrix.command }}
+
+      - name: 上传平台成果物
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.bundle }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: 发布 GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载全部成果物
+        uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: 创建 Release 并上传成果物
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${GITHUB_REF_NAME}"
+          artifacts/*
+          --repo "${GITHUB_REPOSITORY}"
+          --title "OpenCode Go Dashboard ${GITHUB_REF_NAME}"
+          --generate-notes
+          --verify-tag

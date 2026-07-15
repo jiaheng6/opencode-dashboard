@@ -1,0 +1,47 @@
+appId: com.jiaheng6.opencode-go-dashboard
+productName: OpenCode Go Dashboard
+copyright: Copyright © 2026 jiaheng6
+
+directories:
+  output: release
+
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - electron/preload.cjs
+  - package.json
+
+asar: true
+compression: maximum
+artifactName: OpenCode-Go-Dashboard-${version}-${os}-${arch}.${ext}
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  verifyUpdateCodeSignature: false
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: OpenCode Go Dashboard
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  category: Utility
+  synopsis: OpenCode Go 多账号余量看板
+  description: 在本机集中查看多个 OpenCode Go 账号的套餐余量
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - universal
+  category: public.app-category.developer-tools
+  identity: null
