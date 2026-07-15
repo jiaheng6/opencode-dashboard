@@ -2,6 +2,16 @@
 
 这是一个仅在本机运行的 Electron 应用，用于集中展示多个 OpenCode Go 账号的 5 小时、每周和每月余量。
 
+## 运行界面
+
+![OpenCode Go 多账号余量看板运行界面](docs/images/dashboard-preview.png)
+
+> 截图使用示例账号与示例余量生成，不包含真实账号、Cookie 或工作区信息。
+
+## 下载
+
+[前往 GitHub Releases 下载 Windows、Linux 或 macOS 安装包](https://github.com/jiaheng6/opencode-dashboard/releases/latest)
+
 ## 工作方式
 
 - 每新增一个账号，创建一个独立的 Electron `WebContentsView`。
@@ -28,9 +38,10 @@ npm run dev
 npm test
 npm run typecheck
 npm run build
+npm run screenshot
 ```
 
-构建后的前端文件位于 `dist`，Electron 主进程文件位于 `dist-electron`。
+构建后的前端文件位于 `dist`，Electron 主进程文件位于 `dist-electron`。`npm run screenshot` 会运行构建后的界面，并将 README 预览图更新到 `docs/images/dashboard-preview.png`。
 
 ## 桌面安装包
 

@@ -1,6 +1,6 @@
 {
   "name": "opencode-go-dashboard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "author": "jiaheng6",
   "description": "在本机集中查看多个 OpenCode Go 账号的套餐余量",
@@ -13,6 +13,7 @@
     "package:win": "npm run build && electron-builder --win nsis --x64 --publish never",
     "package:linux": "npm run build && electron-builder --linux AppImage --x64 --publish never",
     "package:mac": "npm run build && electron-builder --mac dmg --universal --publish never",
+    "screenshot": "npm run build && electron scripts/capture-readme-screenshot.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit"
